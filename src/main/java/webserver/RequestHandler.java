@@ -7,11 +7,13 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.util.HashMap;
 import java.util.Map;
 import model.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import util.HttpRequestUtils;
+import util.IOUtils;
 
 public class RequestHandler extends Thread {
 
@@ -37,13 +39,26 @@ public class RequestHandler extends Thread {
       }
 
       String path = HttpRequestUtils.getPath(line);
+      Map<String, String> headers = new HashMap<>();
+
+      while (!"".equals(line)) {
+        log.debug("header : {} ", line);
+        line = br.readLine();
+        String[] headerTokens = line.split(": ");
+        if (headerTokens.length == 2) {
+          headers.put(headerTokens[0], headerTokens[1]);
+        }
+      }
+
+      log.debug("Content-Length : {}", headers.get("Content-Length"));
 
       if (path.startsWith("/create")) {
-        int index = path.indexOf("?");
-        String requestPath = path.substring(0, index);
-        String queryString = path.substring(index + 1);
-        Map<String, String> params = HttpRequestUtils.parseQueryString(queryString);
-        User user = new User(params.get("userId"), params.get("password"), params.get("name"), params.get("email"));
+        String requestBody = IOUtils.readBodyData(br, Integer.parseInt(headers.get("Content-Length")));
+        log.debug("requestBody : {} ", requestBody);
+
+        Map<String, String> params = HttpRequestUtils.parseQueryString(requestBody);
+        User user = new User(params.get("userId"), params.get("password"), params.get("name"),
+            params.get("email"));
         log.debug("user : {} ", user.toString());
 
         path = "/index.html";
@@ -54,6 +69,7 @@ public class RequestHandler extends Thread {
 
       response200Header(dos, body.length);
       responseBody(dos, body);
+
     } catch (IOException e) {
       log.error(e.getMessage());
     }
@@ -69,6 +85,7 @@ public class RequestHandler extends Thread {
       log.error(e.getMessage());
     }
   }
+
 
   private void responseBody(DataOutputStream dos, byte[] body) {
     try {
