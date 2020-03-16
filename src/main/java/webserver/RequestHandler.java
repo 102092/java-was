@@ -53,7 +53,8 @@ public class RequestHandler extends Thread {
       log.debug("Content-Length : {}", headers.get("Content-Length"));
 
       if (path.startsWith("/create")) {
-        String requestBody = IOUtils.readBodyData(br, Integer.parseInt(headers.get("Content-Length")));
+        String requestBody = IOUtils
+            .readBodyData(br, Integer.parseInt(headers.get("Content-Length")));
         log.debug("requestBody : {} ", requestBody);
 
         Map<String, String> params = HttpRequestUtils.parseQueryString(requestBody);
@@ -61,15 +62,16 @@ public class RequestHandler extends Thread {
             params.get("email"));
         log.debug("user : {} ", user.toString());
 
-        path = "/index.html";
+        DataOutputStream dos = new DataOutputStream(out);
+        response302Header(dos);
+
+      } else {
+        DataOutputStream dos = new DataOutputStream(out);
+        byte[] body = HttpRequestUtils.getBody(path);
+
+        response200Header(dos, body.length);
+        responseBody(dos, body);
       }
-
-      DataOutputStream dos = new DataOutputStream(out);
-      byte[] body = HttpRequestUtils.getBody(path);
-
-      response200Header(dos, body.length);
-      responseBody(dos, body);
-
     } catch (IOException e) {
       log.error(e.getMessage());
     }
@@ -80,6 +82,16 @@ public class RequestHandler extends Thread {
       dos.writeBytes("HTTP/1.1 200 OK \r\n");
       dos.writeBytes("Content-Type: text/html;charset=utf-8\r\n");
       dos.writeBytes("Content-Length: " + lengthOfBodyContent + "\r\n");
+      dos.writeBytes("\r\n");
+    } catch (IOException e) {
+      log.error(e.getMessage());
+    }
+  }
+
+  private void response302Header(DataOutputStream dos) {
+    try {
+      dos.writeBytes("HTTP/1.1 302 Found \r\n");
+      dos.writeBytes("Location: /index.html \r\n");
       dos.writeBytes("\r\n");
     } catch (IOException e) {
       log.error(e.getMessage());
