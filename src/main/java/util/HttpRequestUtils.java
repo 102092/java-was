@@ -2,6 +2,9 @@ package util;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -24,6 +27,16 @@ public class HttpRequestUtils {
       return "/index.html";
     }
     return path;
+  }
+
+  public static byte[] getBody(String path) throws IOException {
+    String pathName = "./webapp" + path;
+
+    if (Files.exists(new File(pathName).toPath())) {
+      log.debug("getBody {} ", pathName);
+      return Files.readAllBytes(new File("./webapp" + path).toPath());
+    }
+    return "해당 페이지는 존재하지 않습니다".getBytes();
   }
 
   /**
