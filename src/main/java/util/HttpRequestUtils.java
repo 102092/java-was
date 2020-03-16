@@ -18,7 +18,7 @@ public class HttpRequestUtils {
   public static String getPath(String firstLine) {
     String[] tokens = firstLine.split(" ");
     String path = tokens[1];
-    log.debug("path {} ", path);
+//    log.debug("path : {} ", path);
     return checkRootPath(path);
   }
 
@@ -33,7 +33,7 @@ public class HttpRequestUtils {
     String pathName = "./webapp" + path;
 
     if (Files.exists(new File(pathName).toPath())) {
-      log.debug("getBody {} ", pathName);
+//      log.debug("getBody : {} ", pathName);
       return Files.readAllBytes(new File("./webapp" + path).toPath());
     }
     return "해당 페이지는 존재하지 않습니다".getBytes();

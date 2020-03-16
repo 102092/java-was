@@ -7,6 +7,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.util.Map;
+import model.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import util.HttpRequestUtils;
@@ -36,9 +38,20 @@ public class RequestHandler extends Thread {
 
       String path = HttpRequestUtils.getPath(line);
 
+      if (path.startsWith("/create")) {
+        int index = path.indexOf("?");
+        String requestPath = path.substring(0, index);
+        String queryString = path.substring(index + 1);
+        Map<String, String> params = HttpRequestUtils.parseQueryString(queryString);
+        User user = new User(params.get("userId"), params.get("password"), params.get("name"), params.get("email"));
+        log.debug("user : {} ", user.toString());
+
+        path = "/index.html";
+      }
+
       DataOutputStream dos = new DataOutputStream(out);
       byte[] body = HttpRequestUtils.getBody(path);
-      
+
       response200Header(dos, body.length);
       responseBody(dos, body);
     } catch (IOException e) {
